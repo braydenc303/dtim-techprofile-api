@@ -78,6 +78,7 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
         protected void configure(HttpSecurity http) throws Exception {
 
             final String[] URLS = {
+                    "/login",
                     "/api/authenticate",
                     "/api/mockinterviewsession/**",
                     "/api/user/in-attendance",

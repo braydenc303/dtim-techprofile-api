@@ -1,5 +1,6 @@
 package org.haxwell.dtim.techprofile.services;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -37,6 +38,23 @@ public class QuestionServiceImpl implements QuestionService {
 	}
 	
 	@Override
+	public Iterable<Question> getQuestionsAnsweredCorrectlyAtAGivenLineItemAndLevelNumber(Long lineItemId, Long lineItemLevel, Long userId) {
+		List resultList = em.createNativeQuery("SELECT uqg.question_id FROM user_question_grade uqg WHERE uqg.user_id=:userId AND uqg.grade=2 AND uqg.question_id IN (SELECT lilqm.question_id FROM line_item_level_question_map lilqm WHERE lilqm.tech_profile_line_item_id=:lineItemId and lilqm.tech_profile_line_item_level_index=:levelIndex);")
+				.setParameter("userId", userId)
+				.setParameter("lineItemId", lineItemId)
+				.setParameter("levelIndex", lineItemLevel)
+				.getResultList();
+
+		ArrayList<Long> list = new ArrayList<>();
+		
+		for (int i = 0; i < resultList.size(); i++) {
+			list.add(Long.parseLong((resultList.get(i) + "")));
+		}
+		
+		return this.questionRepository.findByIdIn(list);
+	}
+	
+	@Override
 	public List getAllLineItemAndLevelsFor(Long questionId) {
 		List resultList = em.createNativeQuery("SELECT lilqm.tech_profile_line_item_id, lilqm.tech_profile_line_item_level_index FROM line_item_level_question_map lilqm, question q WHERE q.id=:questionId and lilqm.question_id=q.id;")
 				.setParameter("questionId", questionId).getResultList();
@@ -56,8 +74,28 @@ public class QuestionServiceImpl implements QuestionService {
 		}			
 	}
 	
+	public List<Question> getAllQuestionsAskedButNotSuccessfullyAnswered(Long userId) {
+		String str = "fhfdas" + "fdasfdas";
+		str = str + "fdsa";
+		
+		// I had to put this here, because when I had it as a Repo query, it didn't seem to be able to convert the array of values that is a row of results in this query, to a Question object. Not sure why, or what I was missing.. I don't rightly remember, but I bet the reason for the other em.createNativeQuery() usages are for a similar reason. Anyway someone should figure out what's going on there one day. 
+		List<Object[]> resultList = em.createNativeQuery("SELECT q.* FROM question q, user_question_grade uqg WHERE uqg.user_id=:userId AND uqg.question_id=q.id AND (uqg.grade=0 OR uqg.grade=1) ORDER BY q.id")
+			.setParameter("userId",  userId)
+			.getResultList();
+		
+		ArrayList<Question> rtn = new ArrayList<>();
+		
+		resultList.forEach(row -> rtn.add(new Question(Long.parseLong(row[0].toString()), row[1].toString(), row[2].toString())));
+		
+		return rtn;
+	}
+	
+	public List<Question> getAllQuestionsAskedPeriod(Long userId) {
+		return this.questionRepository.findAllQuestionsAskedPeriod(userId);
+	}
+	
 	@Transactional
-	public Question save(Long questionId, String questionText, int[][] lilvassociations) {
+	public Question save(Long questionId, String questionText, String questionDescription, int[][] lilvassociations) {
 		Optional<Question> opt = this.questionRepository.findById(questionId);
 		Question q; 
 		
@@ -68,6 +106,7 @@ public class QuestionServiceImpl implements QuestionService {
 		}
 		
 		q.setText(questionText);
+		q.setDescription(questionDescription);
 		
 		Question savedQ = this.questionRepository.save(q);
 		

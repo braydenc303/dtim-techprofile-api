@@ -122,6 +122,11 @@ public class TechProfileServiceImpl implements TechProfileService {
 	}
 	
 	@Override
+	public Optional<TechProfileLineItem> getLineItem(Long lineItemId) {
+		return techProfileLineItemRepository.findById(lineItemId);
+	}
+	
+	@Override
 	public TechProfileTopic updateTopic(Long topicId, String name) {
 		Optional<TechProfileTopic> opt = techProfileTopicRepository.findById(topicId);
 		TechProfileTopic rtn = null;
@@ -171,7 +176,9 @@ public class TechProfileServiceImpl implements TechProfileService {
 		
 		if (opt.isPresent()) {
 			this.setTopicSequence(arr[1], arr[2]);
-			this.setLineItemSequence(arr[1], arr[3], arr[4]);
+			
+			if (arr[3] > 0 && arr[4] > 0)
+				this.setLineItemSequence(arr[1], arr[3], arr[4]);
 		}
 		
 		return true;
@@ -247,9 +254,53 @@ public class TechProfileServiceImpl implements TechProfileService {
 	/**** *** ***/
 	
 	public List getQuestionCountsPerCell() {
+
+		// For all of the questions associated with each lineItemLevel
+        // where a line item
+        // belongs to a topic
+        //  that in turn belongs to tech profile
+        //  	with id = 1
+		//
+		//	Count all of the times any question is associated with a given lineItem and Level
+
 		List resultList = em.createNativeQuery("select tech_profile_line_item_id, tech_profile_line_item_level_index, count(*) FROM  (select * from line_item_level_question_map lilqm where lilqm.tech_profile_line_item_id in (select tech_profile_line_item_id from tech_profile_topic_line_item_map tptlim where tptlim.tech_profile_topic_id in (select tech_profile_topic_id from tech_profile_topic_map where tech_profile_id = 1))) as tabl GROUP BY tech_profile_line_item_id, tech_profile_line_item_level_index;")
 				.getResultList();
 		
+		return resultList;
+	}
+
+	/**** *** ***/
+	public List getCorrectlyAnsweredQuestionCountsPerCell(Long userId) {	
+		
+		// Get the question_id of every question this user has correctly answered
+		
+		//	Count all of the times a question is associated with a given lineItem and Level		
+		
+		// TODO: When the time comes, we can limit this query to only a subset of the sessions they were in by adding "...AND SESSION_ID < ?1"
+		
+		List resultList = em.createNativeQuery("select tech_profile_line_item_id, tech_profile_line_item_level_index, count(*) FROM  (select * FROM line_item_level_question_map lilqm WHERE lilqm.question_id IN (SELECT DISTINCT(question_id) FROM user_question_grade WHERE user_id=:userId AND grade=2)) as tabl GROUP BY tech_profile_line_item_id, tech_profile_line_item_level_index;")
+				.setParameter("userId", userId)
+				.getResultList();
+
+		return resultList;
+	}
+
+	/**** *** ***/
+	public List getIncorrectlyAnsweredQuestionCountsPerCell(Long userId) {	
+		
+		List resultList = em.createNativeQuery("select tech_profile_line_item_id, tech_profile_line_item_level_index, count(*) FROM  (select * FROM line_item_level_question_map lilqm WHERE lilqm.question_id IN (SELECT DISTINCT(question_id) FROM user_question_grade WHERE user_id=:userId AND (grade=0 OR grade=1))) as tabl GROUP BY tech_profile_line_item_id, tech_profile_line_item_level_index;")
+				.setParameter("userId", userId)
+				.getResultList();
+
+		return resultList;
+	}
+	/**** *** ***/
+	public List getAskedQuestionCountsPerCell(Long userId) {	
+		
+		List resultList = em.createNativeQuery("select tech_profile_line_item_id, tech_profile_line_item_level_index, count(*) FROM  (select * FROM line_item_level_question_map lilqm WHERE lilqm.question_id IN (SELECT DISTINCT(question_id) FROM user_question_grade WHERE user_id=:userId)) as tabl GROUP BY tech_profile_line_item_id, tech_profile_line_item_level_index;")
+				.setParameter("userId", userId)
+				.getResultList();
+
 		return resultList;
 	}
 }

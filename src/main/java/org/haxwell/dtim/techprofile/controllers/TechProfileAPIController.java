@@ -3,6 +3,7 @@ package org.haxwell.dtim.techprofile.controllers;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 import javax.servlet.http.HttpServletRequest;
@@ -77,12 +78,22 @@ public class TechProfileAPIController {
 		String l2desc = request.getParameter(Constants.L2DESCRIPTION);
 		String l3desc = request.getParameter(Constants.L3DESCRIPTION);
 		
-		if (l0desc == null) l0desc = "No skill.";
-		if (l1desc == null) l1desc = "Level 1 skill.";
-		if (l2desc == null) l2desc = "Level 2 skill.";
-		if (l3desc == null) l3desc = "Level 3 skill.";
+		if (l0desc == null) l0desc = "Level 1 skill.";
+		if (l1desc == null) l1desc = "Level 2 skill.";
+		if (l2desc == null) l2desc = "Level 3 skill.";
+		if (l3desc == null) l3desc = "Level 4 skill.";
 		
 		return techProfileService.addLineItem(id, name, l0desc, l1desc, l2desc, l3desc);
+	}
+	
+	@RequestMapping(value = { "/api/techprofile/lineitem/{lineItemId}" }, method=RequestMethod.GET)
+	public TechProfileLineItem getLineItem(HttpServletRequest request, @PathVariable Long lineItemId) {
+		Optional<TechProfileLineItem> rtn = this.techProfileService.getLineItem(lineItemId);
+		
+		if (rtn.isPresent())
+			return rtn.get();
+		else
+			return null;
 	}
 	
 	@RequestMapping(value = { "/api/techprofile/lineitem/{lineItemId}" }, method=RequestMethod.POST)
@@ -156,6 +167,25 @@ public class TechProfileAPIController {
 	@RequestMapping(value = { "/api/techprofile/questionCountsPerCell" }, method=RequestMethod.GET)
 	public List getQuestionCountsPerTechProfileCell() {
 		List list = techProfileService.getQuestionCountsPerCell();
+		
+		return list;
+	}
+	
+	@RequestMapping(value = { "/api/techprofile/user/{userId}/correctlyAnsweredQuestionCountsPerCell" }, method=RequestMethod.GET)
+	public List getCorrectlyAnsweredQuestionCountsPerCell(@PathVariable Long userId) {
+		List list = techProfileService.getCorrectlyAnsweredQuestionCountsPerCell(userId);
+		
+		return list;
+	}
+	@RequestMapping(value = { "/api/techprofile/user/{userId}/incorrectlyAnsweredQuestionCountsPerCell" }, method=RequestMethod.GET)
+	public List getIncorrectlyAnsweredQuestionCountsPerCell(@PathVariable Long userId) {
+		List list = techProfileService.getIncorrectlyAnsweredQuestionCountsPerCell(userId);
+		
+		return list;
+	}
+	@RequestMapping(value = { "/api/techprofile/user/{userId}/askedQuestionCountsPerCell" }, method=RequestMethod.GET)
+	public List getAskedQuestionCountsPerCell(@PathVariable Long userId) {
+		List list = techProfileService.getAskedQuestionCountsPerCell(userId);
 		
 		return list;
 	}

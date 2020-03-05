@@ -9,12 +9,16 @@ public interface QuestionService {
 
 	Iterable<Question> getAll();
 	
-	Iterable<Question> getByLineItemAndLevelNumber(Long lineItemId, Long lineItemLevel);
 	Optional<Question> getById(Long id);
+	Iterable<Question> getByLineItemAndLevelNumber(Long lineItemId, Long lineItemLevel);
+	Iterable<Question> getQuestionsAnsweredCorrectlyAtAGivenLineItemAndLevelNumber(Long lineItemId, Long lineItemLevel, Long userId);
 	
 	List getAllLineItemAndLevelsFor(Long questionId);
 	
 	void setAllLineItemAndLevelsFor(Long questionId, int[][] arr);
 	
-	Question save(Long questionId, String questionText, int[][] lilvassociations);
+	List<Question> getAllQuestionsAskedPeriod(Long userId);
+	List<Question> getAllQuestionsAskedButNotSuccessfullyAnswered(Long userId);
+	
+	Question save(Long questionId, String questionText, String questionDescription, int[][] lilvassociations);
 }

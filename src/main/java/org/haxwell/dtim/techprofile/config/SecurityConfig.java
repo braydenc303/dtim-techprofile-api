@@ -86,7 +86,11 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
                     "/api/user/**",
                     "/api/question/**",
                     "/api/techprofile/**",
-                    "/api/attendance-history/**"
+                    "/api/attendance-history/**",
+                    "/api/careergoal/**",
+                    "/api/path/**",
+                    "/api/milestone/**",
+                    "/api/labour/**"
             };
 
 
